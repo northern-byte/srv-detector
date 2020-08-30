@@ -4,9 +4,10 @@ mod probes;
 mod errors;
 
 use serde_derive::{Deserialize, Serialize};
-use warp::{Filter, Rejection, reject};
+use warp::Filter;
 use url::Url;
-use crate::errors::InvalidUrlsError;
+use warp::http::StatusCode;
+use std::convert::Infallible;
 
 #[derive(Deserialize, Serialize)]
 struct Payload {
@@ -23,24 +24,31 @@ async fn main() {
         .await;
 }
 
-fn to_urls(values: &[String]) -> Result<Vec<Url>, errors::InvalidUrlsError> {
-    let valid = values.iter().filter_map(|v| Url::parse(v).ok()).collect::<Vec<Url>>();
+fn to_urls(mut values: Vec<String>) -> Result<Vec<Url>, errors::InvalidUrlsError> {
+    let mut invalid: Vec<String> = Vec::new();
+    let valid = values.drain(..).into_iter().filter_map(|v| {
+        match Url::parse(&v) {
+            Ok(t) => Some(t),
+            _ => {
+                invalid.push(v);
+                None
+            }
+        }
+    }).collect::<Vec<Url>>();
 
-    if valid.len() != values.len() {
-        return Err(errors::InvalidUrlsError::new());
+    if !invalid.is_empty() {
+        return Err(errors::InvalidUrlsError::new(invalid));
     };
 
     Ok(valid)
 }
 
-impl warp::reject::Reject for InvalidUrlsError {}
-
-async fn handle(payload: Payload) -> std::result::Result<impl warp::Reply, Rejection> {
-    match to_urls(payload.domains.as_slice()) {
+async fn handle(payload: Payload) -> Result<impl warp::Reply, Infallible> {
+    match to_urls( payload.domains) {
         Ok(result) => {
             let res = probes::probe(result).await;
-            Ok(warp::reply::json(&res.unwrap()))
+            Ok(warp::reply::with_status(warp::reply::json(&res.unwrap()), StatusCode::OK))
         }
-        Err(e) => Err(reject::custom(e))
+        Err(e) => Ok(warp::reply::with_status(warp::reply::json(&e), StatusCode::BAD_REQUEST))
     }
 }

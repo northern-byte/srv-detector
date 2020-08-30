@@ -2,16 +2,19 @@ use std::error::Error;
 use serde::export::fmt::Display;
 use serde::export::Formatter;
 use std::fmt;
+use serde_derive::Serialize;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct InvalidUrlsError {
-    message: &'static str
+    message: &'static str,
+    invalid: Vec<String>
 }
 
 impl InvalidUrlsError {
-    pub(crate) fn new() -> InvalidUrlsError {
+    pub(crate) fn new(invalid: Vec<String>) -> InvalidUrlsError {
         InvalidUrlsError {
-            message: "Invalid urls"
+            message: "Invalid urls",
+            invalid
         }
     }
 }
