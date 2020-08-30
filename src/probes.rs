@@ -17,7 +17,7 @@ async fn get_headers(url: Url) -> Option<HashMap<String, String>> {
 }
 
 pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infallible> {
-    let tasks = urls.iter().map(move |u| tokio::spawn(get_headers(u.to_owned()))).collect::<Vec<_>>();
+    let tasks = urls.iter().map(|u| tokio::spawn(get_headers(u.to_owned()))).collect::<Vec<_>>();
     let res = futures::future::join_all(tasks).await;
 
     let filtered: Vec<HashMap<String, String>> = res.into_iter().flatten()
