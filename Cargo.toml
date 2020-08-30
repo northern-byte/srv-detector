@@ -1,0 +1,19 @@
+[package]
+name = "srv-detector"
+version = "0.1.0"
+authors = ["Timur Barblishvili <4765820+StadsHjort@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tokio = { version = "0.2", features = ["full"] }
+warp = "0.2"
+reqwest = "0.10"
+url = "2.1.1"
+serde = "1.0"
+serde_json = "1.0"
+serde_derive = "1.0"
+rayon = "1.4.0"
+futures = "0.3"
+async-std = "1.6.3"
