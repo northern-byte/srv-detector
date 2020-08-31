@@ -2,6 +2,7 @@
 
 mod probes;
 mod errors;
+mod multi_spawn;
 
 use serde_derive::{Deserialize, Serialize};
 use warp::Filter;

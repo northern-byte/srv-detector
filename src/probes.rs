@@ -3,10 +3,10 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use std::vec::IntoIter;
 use async_std::net::{SocketAddr, ToSocketAddrs};
+use crate::multi_spawn::MultiSpawn;
 
 pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infallible> {
-    let tasks = urls.iter().map(|u| tokio::spawn(get_headers(u.to_owned()))).collect::<Vec<_>>();
-    let res = futures::future::join_all(tasks).await;
+    let res = urls.iter().spawn_and_join(get_headers).await;
 
     let filtered: Vec<HashMap<String, String>> = res.into_iter().flatten()
         .filter_map(|p| p)
