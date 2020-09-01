@@ -27,7 +27,7 @@ async fn main() {
 
 fn to_urls(mut values: Vec<String>) -> Result<Vec<Url>, errors::InvalidUrlsError> {
     let mut invalid: Vec<String> = Vec::new();
-    let valid = values.drain(..).into_iter().filter_map(|v| {
+    let valid = values.into_iter().filter_map(|v| {
         match Url::parse(&v) {
             Ok(t) => Some(t),
             _ => {
