@@ -5,6 +5,7 @@ use std::vec::IntoIter;
 use async_std::net::{SocketAddr, ToSocketAddrs};
 use crate::multi_spawn::MultiSpawn;
 use std::sync::Arc;
+use std::ops::Deref;
 
 pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infallible> {
     let shared_urls = urls.into_iter().map(Arc::new).collect::<Vec<Arc<Url>>>();
@@ -17,7 +18,7 @@ pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infal
     Ok(filtered)
 }
 
-async fn get_headers(url: Arc<Url>) -> Option<HashMap<String, String>> {
+async fn get_headers<U: Deref<Target=Url>>(url: U) -> Option<HashMap<String, String>> {
     let res = reqwest::Client::new().head(url.as_str()).send().await;
 
     match res {
@@ -31,7 +32,7 @@ async fn get_headers(url: Arc<Url>) -> Option<HashMap<String, String>> {
     }
 }
 
-async fn resolve_host(url: Arc<Url>) -> Result<IntoIter<SocketAddr>, std::io::Error> {
+async fn resolve_host<U: Deref<Target=Url>>(url: U) -> Result<IntoIter<SocketAddr>, std::io::Error> {
     let target: String;
 
     if url.port().is_none() {
@@ -47,6 +48,7 @@ async fn resolve_host(url: Arc<Url>) -> Result<IntoIter<SocketAddr>, std::io::Er
 mod probe_tests {
     use futures_await_test::async_test;
     use crate::probes::resolve_host;
+    use std::sync::Arc;
 
     #[async_test]
     async fn test_ex() {
@@ -54,7 +56,7 @@ mod probe_tests {
 
         let result = Url::parse("http://detectify.com");
 
-        let addr = resolve_host(result.unwrap()).await.unwrap().next().unwrap();
+        let addr = resolve_host(Arc::new(result.unwrap())).await.unwrap().next().unwrap();
         println!("{}", addr)
     }
 }
