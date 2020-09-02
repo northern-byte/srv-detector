@@ -45,7 +45,7 @@ fn to_urls(values: Vec<String>) -> Result<Vec<Url>, errors::InvalidUrlsError> {
 }
 
 async fn handle(payload: Payload) -> Result<impl warp::Reply, Infallible> {
-    match to_urls( payload.domains) {
+    match to_urls(payload.domains) {
         Ok(result) => {
             let res = probes::probe(result).await;
             Ok(warp::reply::with_status(warp::reply::json(&res), StatusCode::OK))

@@ -11,6 +11,7 @@ use serde_derive::{Serialize};
 enum Header {
     Server(String),
     ContentLength(String),
+    XPoweredBy(String)
 }
 
 #[derive(Serialize)]
@@ -54,6 +55,7 @@ async fn get_headers<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<Header
                     match p.0.as_str() {
                         "server" => Some(Header::Server(p.1.to_str().unwrap_or_default().to_string())),
                         "content-length" => Some(Header::ContentLength(p.1.to_str().unwrap_or_default().to_string())),
+                        "x-powered-by" => Some(Header::XPoweredBy(p.1.to_str().unwrap_or_default().to_string())),
                         _ => None
                     }
                 }).filter_map(|h| h).collect::<Vec<Header>>();
