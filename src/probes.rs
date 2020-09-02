@@ -1,6 +1,6 @@
 use url::{Url};
 use std::collections::HashMap;
-use async_std::net::{SocketAddr, ToSocketAddrs};
+use async_std::net::{ToSocketAddrs, IpAddr};
 use crate::multi_spawn::MultiSpawn;
 use std::sync::Arc;
 use std::ops::Deref;
@@ -16,7 +16,7 @@ enum Header {
 #[derive(Serialize)]
 pub struct ProbeResult {
     headers: Vec<Header>,
-    ips: Vec<SocketAddr>,
+    ips: Vec<IpAddr>,
 }
 
 pub async fn probe(urls: Vec<Url>) -> HashMap<String, ProbeResult> {
@@ -64,7 +64,7 @@ async fn get_headers<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<Header
     }
 }
 
-async fn resolve_host<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<SocketAddr>), std::io::Error> {
+async fn resolve_host<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<IpAddr>), std::io::Error> {
     let target: String;
 
     if url.port().is_none() {
@@ -74,7 +74,7 @@ async fn resolve_host<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<Socke
     }
 
     let addr = target.to_socket_addrs().await?;
-    Ok((url.as_str().to_string(), addr.collect()))
+    Ok((url.as_str().to_string(), addr.map(|a| a.ip()).collect()))
 }
 
 mod probe_tests {
