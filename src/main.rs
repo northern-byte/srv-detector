@@ -25,7 +25,7 @@ async fn main() {
         .await;
 }
 
-fn to_urls(mut values: Vec<String>) -> Result<Vec<Url>, errors::InvalidUrlsError> {
+fn to_urls(values: Vec<String>) -> Result<Vec<Url>, errors::InvalidUrlsError> {
     let mut invalid: Vec<String> = Vec::new();
     let valid = values.into_iter().filter_map(|v| {
         match Url::parse(&v) {
