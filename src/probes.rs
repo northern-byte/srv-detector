@@ -10,6 +10,7 @@ use serde_derive::{Serialize};
 #[derive(Serialize)]
 enum Header {
     Server(String),
+    ContentLength(String),
 }
 
 #[derive(Serialize)]
@@ -34,7 +35,7 @@ pub async fn probe(urls: Vec<Url>) -> HashMap<String, ProbeResult> {
         let s = r.unwrap();
 
         if let Some(mut pr) = probe_results.get_mut(s.0.as_str()) {
-             pr.ips = s.1;
+            pr.ips = s.1;
         };
     });
 
@@ -52,6 +53,7 @@ async fn get_headers<U: Deref<Target=Url>>(url: U) -> Result<(String, Vec<Header
                 .map(|p| {
                     match p.0.as_str() {
                         "server" => Some(Header::Server(p.1.to_str().unwrap_or_default().to_string())),
+                        "content-length" => Some(Header::ContentLength(p.1.to_str().unwrap_or_default().to_string())),
                         _ => None
                     }
                 }).filter_map(|h| h).collect::<Vec<Header>>();
