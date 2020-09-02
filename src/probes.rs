@@ -4,9 +4,11 @@ use std::convert::Infallible;
 use std::vec::IntoIter;
 use async_std::net::{SocketAddr, ToSocketAddrs};
 use crate::multi_spawn::MultiSpawn;
+use std::sync::Arc;
 
 pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infallible> {
-    let res = urls.iter().spawn_and_join(get_headers).await;
+    let shared_urls = urls.into_iter().map(Arc::new).collect::<Vec<Arc<Url>>>();
+    let res = shared_urls.iter().spawn_and_join(get_headers).await;
 
     let filtered: Vec<HashMap<String, String>> = res.into_iter().flatten()
         .filter_map(|p| p)
@@ -15,7 +17,7 @@ pub async fn probe(urls: Vec<Url>) -> Result<Vec<HashMap<String, String>>, Infal
     Ok(filtered)
 }
 
-async fn get_headers(url: Url) -> Option<HashMap<String, String>> {
+async fn get_headers(url: Arc<Url>) -> Option<HashMap<String, String>> {
     let res = reqwest::Client::new().head(url.as_str()).send().await;
 
     match res {
@@ -29,7 +31,7 @@ async fn get_headers(url: Url) -> Option<HashMap<String, String>> {
     }
 }
 
-async fn resolve_host(url: Url) -> Result<IntoIter<SocketAddr>, std::io::Error> {
+async fn resolve_host(url: Arc<Url>) -> Result<IntoIter<SocketAddr>, std::io::Error> {
     let target: String;
 
     if url.port().is_none() {
