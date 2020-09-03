@@ -53,3 +53,15 @@ async fn handle(payload: Payload) -> Result<impl warp::Reply, Infallible> {
         Err(e) => Ok(warp::reply::with_status(warp::reply::json(&e), StatusCode::BAD_REQUEST))
     }
 }
+
+#[cfg(test)]
+mod api_tests {
+    use url::Url;
+
+    #[tokio::test]
+    async fn test_detect() {
+        //TODO finish the test
+        let url = Url::parse("http://localhost:3030/detect").unwrap();
+        let _res = reqwest::Client::new().post(url).json(&vec!["http://detectify.com"]).send().await;
+    }
+}
