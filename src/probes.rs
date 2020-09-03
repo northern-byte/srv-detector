@@ -24,8 +24,11 @@ pub async fn probe(urls: Vec<Url>) -> HashMap<String, ProbeResult> {
     let mut probe_results: HashMap<String, ProbeResult> = urls.iter().map(|u| (u.as_str().to_string(), ProbeResult { headers: vec![], ips: vec![] })).collect();
 
     let shared_urls = urls.into_iter().map(Arc::new).collect::<Vec<Arc<Url>>>();
-    let headers = shared_urls.iter().spawn_and_join(get_headers).await;
-    let addresses = shared_urls.iter().spawn_and_join(resolve_host).await;
+    let headers_task_handle = shared_urls.iter().spawn_and_join(get_headers);
+    let addresses_task_handle = shared_urls.iter().spawn_and_join(resolve_host);
+
+    let addresses = addresses_task_handle.await;
+    let headers = headers_task_handle.await;
 
     headers.into_iter().filter(|r| r.is_ok()).map(|r| r.unwrap()).filter(|r| r.is_ok()).for_each(|r| {
         let t = r.unwrap();
